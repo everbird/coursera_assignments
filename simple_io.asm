@@ -63,20 +63,15 @@ _6:     .asciiz "Sixth\n"
 _7:     .asciiz "Seventh\n"
 _8:     .asciiz "Eighth\n"
 _9:     .asciiz "Ninth\n"
+star:   .asciiz "*\n"
 
 capitals:   .word   _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X, _Y, _Z
 lowers:     .word   _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z
 numbers:    .word   _0, _1, _2, _3, _4, _5, _6, _7, _8, _9
-size:       .word   3
-
-star:   .asciiz "*\n"
 
         .text
         .globl  main
 main:
-        la $s2, size
-
-loop:
         li  $v0, 12
         syscall
 
@@ -84,70 +79,44 @@ loop:
         move  $t1, $v0
         beq $t0, $t1, end
 
+        # check_lowers:
         move $t0, $v0
-
-check_lowers:
-        la  $t1, 'a'
-        blt $t0, $t1, check_capitals
-
         la  $t1, 'z'
-        bgt $t0, $t1, printdefault
+        bgt $t0, $t1, print_default
+        la  $t1, 'a'
+        bge $t0, $t1, find_lower
 
-        j print_lower
-
-check_capitals:
-        la  $t1, 'A'
-        blt $t0, $t1, check_numbers
-
-        la  $t1, 'Z'
-        bgt $t0, $t1, printdefault
-
-        j print_capitals
-
-check_numbers:
+        # check_capitals:
         move $t0, $v0
+        la  $t1, 'Z'
+        bgt $t0, $t1, print_default
+        la  $t1, 'A'
+        bge $t0, $t1, find_capitals
 
+        # check_numbers:
+        move $t0, $v0
         la  $t1, '0'
-        blt $t0, $t1, printdefault
-
+        blt $t0, $t1, print_default
         la  $t1, '9'
-        bgt $t0, $t1, printdefault
-        j   print_numbers
+        bgt $t0, $t1, print_default
 
-print_capitals:
-        la $s1, capitals
-        move  $t2, $v0
-        li  $t3, 65
-        sub $t1, $t2, $t3
-        mul $t0, $t1, 4
-        la  $t3, ($s1)
-        add $t1, $t0, $t3
-        lw  $t2, ($t1)
-        la  $a0, 0($t2)
-
-        li  $v0, 4
-        syscall
-        j   loop
-
-print_lower:
-        la $s1, lowers
-        move  $t2, $v0
-        li  $t3, 97
-        sub $t1, $t2, $t3
-        mul $t0, $t1, 4
-        la  $t3, ($s1)
-        add $t1, $t0, $t3
-        lw  $t2, ($t1)
-        la  $a0, 0($t2)
-
-        li  $v0, 4
-        syscall
-        j   loop
-
-print_numbers:
+find_numbers:
         la $s1, numbers
-        move  $t2, $v0
         li  $t3, 48
+        j   print
+
+find_capitals:
+        la $s1, capitals
+        li  $t3, 65
+        j   print
+
+find_lower:
+        la $s1, lowers
+        li  $t3, 97
+        j   print
+
+print:
+        move  $t2, $v0
         sub $t1, $t2, $t3
         mul $t0, $t1, 4
         la  $t3, ($s1)
@@ -157,12 +126,12 @@ print_numbers:
 
         li  $v0, 4
         syscall
-        j   loop
+        j   main
 
-printdefault:
+print_default:
         la  $a0, star
         li  $v0, 4
         syscall
-        j   loop
+        j   main
 
 end:
