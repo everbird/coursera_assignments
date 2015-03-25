@@ -1,4 +1,20 @@
-# test.asm
+# simple_io.asm
+#
+# Simple i/o using syscall
+# Ref: Coursera | PKU | Computer Organization | Peer Assessments 1
+#
+# 利用系统功能调用从键盘输入，转换后在屏幕上显示，具体要求如下：
+#
+# (1)     如果输入的是字母（A~Z，区分大小写）或数字（0~9），则将其转换成对应的英文单词后在屏幕上显示，对应关系见下表
+#
+# (2)     若输入的不是字母或数字，则在屏幕上输出字符“*”，
+#
+# (3)     每输入一个字符，即时转换并在屏幕上显示，
+#
+# (4)     支持反复输入，直到按“?”键结束程序。
+#
+# :copyright: (c) 2015 by Stephen Zhuang.
+#
 
         .data
 _A:     .asciiz "Alpha\n"
@@ -75,55 +91,40 @@ main:
         li  $v0, 12
         syscall
 
-        la  $t0, '?'
-        move  $t1, $v0
-        beq $t0, $t1, end
+        beq $v0, '?', end
 
-        # check_lowers:
-        move $t0, $v0
-        la  $t1, 'z'
-        bgt $t0, $t1, print_default
-        la  $t1, 'a'
-        bge $t0, $t1, find_lower
-
-        # check_capitals:
-        move $t0, $v0
-        la  $t1, 'Z'
-        bgt $t0, $t1, print_default
-        la  $t1, 'A'
-        bge $t0, $t1, find_capitals
-
-        # check_numbers:
-        move $t0, $v0
-        la  $t1, '0'
-        blt $t0, $t1, print_default
-        la  $t1, '9'
-        bgt $t0, $t1, print_default
+        # Ref: http://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart
+        bgt $v0, 'z', print_default # ascii[z:]
+        bge $v0, 'a', find_lower    # ascii[a:z]
+        bgt $v0, 'Z', print_default # ascii[Z:a]
+        bge $v0, 'A', find_capitals # ascii[A:Z]
+        bgt $v0, '9', print_default # ascii[9:A]
+        blt $v0, '0', print_default # ascii[:0]
+        # ascii[0:9]
 
 find_numbers:
-        la $s1, numbers
-        li  $t3, 48
+        la $s0, numbers
+        li  $t3, '0'
         j   print
 
 find_capitals:
-        la $s1, capitals
-        li  $t3, 65
+        la $s0, capitals
+        li  $t3, 'A'
         j   print
 
 find_lower:
-        la $s1, lowers
-        li  $t3, 97
+        la $s0, lowers
+        li  $t3, 'a'
         j   print
 
 print:
-        move  $t2, $v0
-        sub $t1, $t2, $t3
-        mul $t0, $t1, 4
-        la  $t3, ($s1)
-        add $t1, $t0, $t3
-        lw  $t2, ($t1)
-        la  $a0, 0($t2)
+        sub $t1, $v0, $t3   # Caculate index
+        mul $t0, $t1, 4     # Caculate address offset for string array
+        la  $t3, ($s0)
+        add $t1, $t0, $t3   # Find address in string array for symbolic address
+        lw  $t2, ($t1)      # Load symbolic address as content from found address
 
+        la  $a0, ($t2)      # Output the found symbloic address content
         li  $v0, 4
         syscall
         j   main
