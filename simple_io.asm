@@ -53,6 +53,7 @@ _w:     .asciiz "whisky\n"
 _x:     .asciiz "x-ray\n"
 _y:     .asciiz "yankee\n"
 _z:     .asciiz "zulu\n"
+_0:     .asciiz "zero\n"
 _1:     .asciiz "First\n"
 _2:     .asciiz "Second\n"
 _3:     .asciiz "Third\n"
@@ -62,17 +63,17 @@ _6:     .asciiz "Sixth\n"
 _7:     .asciiz "Seventh\n"
 _8:     .asciiz "Eighth\n"
 _9:     .asciiz "Ninth\n"
-_0:     .asciiz "zero\n"
 
-strs:   .word   _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X, _Y, _Z
-size:   .word   3
+capitals:   .word   _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X, _Y, _Z
+lowers:     .word   _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z
+numbers:    .word   _0, _1, _2, _3, _4, _5, _6, _7, _8, _9
+size:       .word   3
 
 star:   .asciiz "*\n"
 
         .text
         .globl  main
 main:
-        la $s1, strs
         la $s2, size
 
 loop:
@@ -85,15 +86,44 @@ loop:
 
         move $t0, $v0
 
+check_lowers:
         la  $t1, 'a'
-        blt $t0, $t1, checknum
+        blt $t0, $t1, check_numbers
 
         la  $t1, 'z'
         bgt $t0, $t1, printdefault
 
-print:
+        j print_lower
+
+check_numbers:
+        move $t0, $v0
+
+        la  $t1, '0'
+        blt $t0, $t1, printdefault
+
+        la  $t1, '9'
+        bgt $t0, $t1, printdefault
+        j   print_numbers
+
+print_lower:
+        la $s1, lowers
         move  $t2, $v0
         li  $t3, 97
+        sub $t1, $t2, $t3
+        mul $t0, $t1, 4
+        la  $t3, ($s1)
+        add $t1, $t0, $t3
+        lw  $t2, ($t1)
+        la  $a0, 0($t2)
+
+        li  $v0, 4
+        syscall
+        j   loop
+
+print_numbers:
+        la $s1, numbers
+        move  $t2, $v0
+        li  $t3, 48
         sub $t1, $t2, $t3
         mul $t0, $t1, 4
         la  $t3, ($s1)
@@ -110,15 +140,5 @@ printdefault:
         li  $v0, 4
         syscall
         j   loop
-
-checknum:
-        move $t0, $v0
-
-        la  $t1, '0'
-        blt $t0, $t1, printdefault
-
-        la  $t1, '9'
-        bgt $t0, $t1, printdefault
-        j   print
 
 end:
