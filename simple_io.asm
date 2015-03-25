@@ -88,12 +88,21 @@ loop:
 
 check_lowers:
         la  $t1, 'a'
-        blt $t0, $t1, check_numbers
+        blt $t0, $t1, check_capitals
 
         la  $t1, 'z'
         bgt $t0, $t1, printdefault
 
         j print_lower
+
+check_capitals:
+        la  $t1, 'A'
+        blt $t0, $t1, check_numbers
+
+        la  $t1, 'Z'
+        bgt $t0, $t1, printdefault
+
+        j print_capitals
 
 check_numbers:
         move $t0, $v0
@@ -104,6 +113,21 @@ check_numbers:
         la  $t1, '9'
         bgt $t0, $t1, printdefault
         j   print_numbers
+
+print_capitals:
+        la $s1, capitals
+        move  $t2, $v0
+        li  $t3, 65
+        sub $t1, $t2, $t3
+        mul $t0, $t1, 4
+        la  $t3, ($s1)
+        add $t1, $t0, $t3
+        lw  $t2, ($t1)
+        la  $a0, 0($t2)
+
+        li  $v0, 4
+        syscall
+        j   loop
 
 print_lower:
         la $s1, lowers
