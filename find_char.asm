@@ -39,8 +39,8 @@
 
         .data
 store:  .space  64
-msg_found:  .asciiz "Success! Location: "
-msg_fail:   .asciiz "Fail!\n"
+msg_success:    .asciiz "Success! Location: "
+msg_fail:       .asciiz "Fail!\n"
 
         .text
         .globl main
@@ -50,25 +50,25 @@ main:
         li  $a1, 64
         syscall
 
-user_input:
+read_char:
         li  $v0, 12
         syscall
 
         beq $v0, '?', end
 
+        # Reset status
         la  $t0, store
         li  $t3, 1
 search:
-        lb  $t1, ($t0)
+        lb  $t1, ($t0)  # Read one char from string
         beq $t1, $v0, print_found
         beq $t1, '\0', not_found
-        addi    $t2, $t0, 1
-        addi    $t3, $t3, 1
-        move    $t0, $t2
+        addi    $t0, $t0, 1 # Address offset +1
+        addi    $t3, $t3, 1 # Counter +1
         j   search
 
 print_found:
-        la  $a0, msg_found
+        la  $a0, msg_success
         li  $v0, 4
         syscall
 
@@ -80,12 +80,12 @@ print_found:
         li  $v0, 11
         syscall
 
-        j   user_input
+        j   read_char
 
 not_found:
         la  $a0, msg_fail
         li  $v0, 4
         syscall
-        j   user_input
+        j   read_char
 
 end:
